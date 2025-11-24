@@ -42,8 +42,8 @@ const WallpaperCalculator: React.FC = () => {
   }, [wallWidth, wallHeight, rollWidth]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm animate-fade-in">
-      <div className="flex items-center gap-2 mb-4 text-gray-800 border-b pb-2">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm animate-fade-in transition-colors duration-200">
+      <div className="flex items-center gap-2 mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 pb-2">
         <Calculator size={18} className="text-primary" />
         <h3 className="font-bold text-sm">محاسبه متراژ کاغذ دیواری</h3>
       </div>
@@ -51,29 +51,29 @@ const WallpaperCalculator: React.FC = () => {
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">عرض دیوار (cm)</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">عرض دیوار (cm)</label>
             <input
               type="number"
               value={wallWidth}
               onChange={(e) => setWallWidth(e.target.value)}
-              className="w-full p-2 border rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-gray-50 text-left"
+              className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left"
               placeholder="مثلاً 300"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">ارتفاع دیوار (cm)</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">ارتفاع دیوار (cm)</label>
             <input
               type="number"
               value={wallHeight}
               onChange={(e) => setWallHeight(e.target.value)}
-              className="w-full p-2 border rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-gray-50 text-left"
+              className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left"
               placeholder="مثلاً 280"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1">عرض رول کاغذ (cm)</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">عرض رول کاغذ (cm)</label>
           <div className="grid grid-cols-4 gap-2">
             {ROLL_WIDTHS.map((w) => (
               <button
@@ -82,7 +82,7 @@ const WallpaperCalculator: React.FC = () => {
                 className={`py-1 px-2 rounded-md text-xs font-medium transition-colors border ${
                   rollWidth === w
                     ? 'bg-primary text-white border-primary'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                    : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                 }`}
               >
                 {w}
@@ -92,16 +92,16 @@ const WallpaperCalculator: React.FC = () => {
         </div>
 
         {result && (
-          <div className="mt-4 bg-green-50 border border-green-100 rounded-lg p-3">
+          <div className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-lg p-3">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs text-gray-600">تعداد ردیف (قواره):</span>
-              <span className="text-sm font-bold text-gray-800">{result.strips} عدد</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">تعداد ردیف (قواره):</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{result.strips} عدد</span>
             </div>
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs text-gray-600">طول کل مورد نیاز:</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">طول کل مورد نیاز:</span>
               <span className="text-sm font-bold text-primary">{result.totalLength} متر</span>
             </div>
-            <div className="text-[10px] text-gray-400 mt-2 text-center">
+            <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 text-center">
               * با احتساب ۱۰ سانتی‌متر اضافه برای برش
             </div>
           </div>

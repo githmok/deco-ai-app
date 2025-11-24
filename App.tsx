@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Image as ImageIcon, Sparkles, RefreshCw, Wand2, Download, Palette, Home, LayoutGrid, Brush, ZoomIn, ZoomOut, Maximize, Undo2, Redo2, Save, Trash2, Images, Plus, Check, MessageCircle, Send, Link as LinkIcon, Key, CreditCard, CheckCircle2, Loader2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, Sparkles, RefreshCw, Wand2, Download, Palette, Home, LayoutGrid, Brush, ZoomIn, ZoomOut, Maximize, Undo2, Redo2, Save, Trash2, Images, Plus, Check, MessageCircle, Send, Link as LinkIcon, Key, CreditCard, CheckCircle2, Loader2, Moon, Sun } from 'lucide-react';
 import ComparisonSlider from './components/ComparisonSlider';
 import ChatInterface from './components/ChatInterface';
 import WallpaperCalculator from './components/WallpaperCalculator';
@@ -120,6 +120,15 @@ const compressImage = async (input: string, maxWidth = 1024, quality = 0.8): Pro
 const App: React.FC = () => {
   const [status, setStatus] = useState<AppStatus>(AppStatus.IDLE);
   
+  // Theme state
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem('theme') === 'dark' ||
+        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
+
   const [designState, setDesignState] = useState<DesignState>({
     originalImage: DEFAULT_ROOM_IMAGE,
     generatedImage: null,
@@ -177,6 +186,17 @@ const App: React.FC = () => {
 
   const isSuccess = (index: number, type: string) => !!successStates[`${index}-${type}`];
   const isLoading = (index: number, type: string) => !!loadingStates[`${type}-${index}`];
+
+  // --- Persistence: Theme Effect ---
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   // --- Persistence: Load State ---
   useEffect(() => {
@@ -690,42 +710,53 @@ const App: React.FC = () => {
   const handleMouseUp = () => setIsPanning(false);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50 overflow-hidden font-sans" dir="rtl">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans transition-colors duration-200" dir="rtl">
       
       {isLicenseLocked && <LicenseModal onSubmit={validateLicense} />}
 
-      <div className="w-full md:w-[400px] bg-white shadow-2xl z-20 flex flex-col h-full border-l border-gray-200 flex-shrink-0">
+      <div className="w-full md:w-[400px] bg-white dark:bg-gray-800 shadow-2xl z-20 flex flex-col h-full border-l border-gray-200 dark:border-gray-700 flex-shrink-0 transition-colors duration-200">
         <div className="p-6 bg-gradient-to-br from-primary to-gray-900 text-white">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Palette className="text-white/90" size={32} />
-            طراحی کاغذ دیواری
-          </h1>
-          <p className="text-red-100 text-sm mt-2 opacity-90">تغییر طرح با حفظ کامل چیدمان</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <Palette className="text-white/90" size={32} />
+                طراحی کاغذ دیواری
+              </h1>
+              <p className="text-red-100 text-sm mt-2 opacity-90">تغییر طرح با حفظ کامل چیدمان</p>
+            </div>
+            <button 
+              onClick={() => setDarkMode(!darkMode)} 
+              className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+              title={darkMode ? 'حالت روز' : 'حالت شب'}
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </div>
 
-        <div className="flex border-b border-gray-100 bg-white">
-          <button onClick={() => setActiveTab('design')} className={`flex-1 py-4 text-sm font-bold transition-all duration-200 ${activeTab === 'design' ? 'text-primary border-b-4 border-primary bg-red-50/50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
+        <div className="flex border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <button onClick={() => setActiveTab('design')} className={`flex-1 py-4 text-sm font-bold transition-all duration-200 ${activeTab === 'design' ? 'text-primary border-b-4 border-primary bg-red-50/50 dark:bg-red-900/20' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
             <div className="flex items-center justify-center gap-2"><Wand2 size={16} /> استودیو</div>
           </button>
-          <button onClick={() => setActiveTab('gallery')} className={`flex-1 py-4 text-sm font-bold transition-all duration-200 ${activeTab === 'gallery' ? 'text-primary border-b-4 border-primary bg-red-50/50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
+          <button onClick={() => setActiveTab('gallery')} className={`flex-1 py-4 text-sm font-bold transition-all duration-200 ${activeTab === 'gallery' ? 'text-primary border-b-4 border-primary bg-red-50/50 dark:bg-red-900/20' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
             <div className="flex items-center justify-center gap-2"><Images size={16} /> گالری ({savedDesigns.length})</div>
           </button>
-          <button onClick={() => setActiveTab('chat')} className={`flex-1 py-4 text-sm font-bold transition-all duration-200 ${activeTab === 'chat' ? 'text-primary border-b-4 border-primary bg-red-50/50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
+          <button onClick={() => setActiveTab('chat')} className={`flex-1 py-4 text-sm font-bold transition-all duration-200 ${activeTab === 'chat' ? 'text-primary border-b-4 border-primary bg-red-50/50 dark:bg-red-900/20' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
             <div className="flex items-center justify-center gap-2"><CreditCard size={16} /> خرید</div>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-900">
           {activeTab === 'design' ? (
             <div className="p-6 space-y-8">
               
               {/* 1. Upload Room */}
               <div className="space-y-3 animate-fade-in">
-                <label className="block text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <span className="bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                  <span className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">1</span>
                   تصویر اتاق شما
                 </label>
-                <div onClick={() => fileInputRef.current?.click()} className={`relative border-2 border-dashed rounded-2xl p-1 transition-all cursor-pointer group overflow-hidden bg-white ${designState.originalImage ? 'border-primary/50' : 'border-gray-300 hover:border-primary'}`}>
+                <div onClick={() => fileInputRef.current?.click()} className={`relative border-2 border-dashed rounded-2xl p-1 transition-all cursor-pointer group overflow-hidden bg-white dark:bg-gray-800 ${designState.originalImage ? 'border-primary/50' : 'border-gray-300 dark:border-gray-600 hover:border-primary'}`}>
                   {designState.originalImage ? (
                     <div className="relative w-full h-40 rounded-xl overflow-hidden shadow-sm">
                       <img src={designState.originalImage} alt="Room" className="w-full h-full object-cover" />
@@ -734,8 +765,8 @@ const App: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="h-32 flex flex-col items-center justify-center text-gray-400">
-                      <Upload className="w-8 h-8 mb-3 text-gray-300 group-hover:text-primary group-hover:scale-110 transition-all" />
+                    <div className="h-32 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                      <Upload className="w-8 h-8 mb-3 text-gray-300 dark:text-gray-600 group-hover:text-primary group-hover:scale-110 transition-all" />
                       <span className="text-xs font-medium">برای آپلود کلیک کنید</span>
                     </div>
                   )}
@@ -745,9 +776,9 @@ const App: React.FC = () => {
 
               {/* 2. Texture Upload Section */}
               <div className="space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
-                <label className="block text-sm font-bold text-gray-700 flex items-center justify-between">
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                     <span className="bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                     <span className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">2</span>
                      انتخاب طرح کاغذ (تا ۱۰ مورد)
                   </div>
                 </label>
@@ -757,7 +788,7 @@ const App: React.FC = () => {
                     <div key={index} className="flex flex-col items-center gap-1">
                       <div 
                         className={`relative min-w-[80px] w-20 h-20 rounded-xl border-2 transition-all cursor-pointer overflow-hidden group snap-center shadow-sm flex-shrink-0
-                          ${selectedTextureIndex === index ? 'border-primary ring-2 ring-primary/20 scale-105 z-10 shadow-md rotate-y-12' : 'border-gray-200 hover:border-gray-300 hover:scale-105'}
+                          ${selectedTextureIndex === index ? 'border-primary ring-2 ring-primary/20 scale-105 z-10 shadow-md rotate-y-12' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:scale-105'}
                         `}
                         onClick={() => {
                           if (slot) setSelectedTextureIndex(index);
@@ -779,7 +810,7 @@ const App: React.FC = () => {
                             )}
                           </>
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                              <Plus size={20} className="mb-1" />
                              <span className="text-[9px]">افزودن</span>
                           </div>
@@ -792,7 +823,7 @@ const App: React.FC = () => {
                           <button 
                              onClick={(e) => { e.stopPropagation(); handleTextureUrlInput(index); }}
                              disabled={isLoading(index, 'link')}
-                             className="p-1.5 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-blue-500 hover:border-blue-500 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                             className="p-1.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-300 hover:text-blue-500 hover:border-blue-500 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                              title="دریافت از لینک"
                           >
                              {isLoading(index, 'link') ? (
@@ -809,7 +840,7 @@ const App: React.FC = () => {
                               {/* Save/Persist */}
                               <button 
                                 onClick={(e) => saveTextureDefault(e, index)}
-                                className="p-1.5 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-green-500 hover:border-green-500 shadow-sm transition-all cursor-pointer active:scale-95"
+                                className="p-1.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-300 hover:text-green-500 hover:border-green-500 shadow-sm transition-all cursor-pointer active:scale-95"
                                 title="ذخیره به عنوان پیش‌فرض"
                               >
                                 {isSuccess(index, 'save') ? <Check size={10} className="text-green-600" /> : <Save size={10} />}
@@ -817,7 +848,7 @@ const App: React.FC = () => {
                               {/* Delete */}
                               <button 
                                 onClick={(e) => removeTexture(e, index)}
-                                className="p-1.5 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-500 shadow-sm transition-all cursor-pointer active:scale-95"
+                                className="p-1.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-300 hover:text-red-500 hover:border-red-500 shadow-sm transition-all cursor-pointer active:scale-95"
                                 title="حذف"
                               >
                                 {isSuccess(index, 'delete') ? <Check size={10} className="text-green-600" /> : <Trash2 size={10} />}
@@ -827,7 +858,7 @@ const App: React.FC = () => {
                              // Upload Button
                              <button 
                                 onClick={(e) => { e.stopPropagation(); triggerTextureUpload(index); }}
-                                className="p-1.5 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-primary hover:border-primary shadow-sm transition-all cursor-pointer active:scale-95"
+                                className="p-1.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-300 hover:text-primary hover:border-primary shadow-sm transition-all cursor-pointer active:scale-95"
                                 title="آپلود فایل"
                              >
                                 <Upload size={10} />
@@ -842,8 +873,8 @@ const App: React.FC = () => {
 
               {/* 3. Styles */}
               <div className="space-y-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                <label className="block text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <span className="bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                  <span className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
                   انتخاب حالت طراحی
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -852,13 +883,13 @@ const App: React.FC = () => {
                       key={style.id}
                       onClick={() => handleGenerate(style.prompt)}
                       disabled={!designState.originalImage || status === AppStatus.GENERATING_IMAGE}
-                      className="group relative p-4 rounded-xl border border-gray-100 bg-white hover:border-primary hover:bg-red-50 transition-all text-right shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
+                      className="group relative p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary hover:bg-red-50 dark:hover:bg-gray-700 transition-all text-right shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
                     >
                       <div className="relative z-10 flex flex-col gap-2">
                         <span className="text-primary group-hover:scale-110 transition-transform duration-300 origin-right">
                           {style.icon}
                         </span>
-                        <span className="text-xs font-bold text-gray-700 group-hover:text-primary">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary">
                           {style.name}
                         </span>
                       </div>
@@ -868,11 +899,11 @@ const App: React.FC = () => {
               </div>
 
               {/* Custom Prompt */}
-              <div className="space-y-3 pt-6 border-t border-gray-200 animate-fade-in" style={{ animationDelay: '300ms' }}>
-                <label className="block text-sm font-bold text-gray-700">توضیحات سفارشی:</label>
+              <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-gray-700 animate-fade-in" style={{ animationDelay: '300ms' }}>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200">توضیحات سفارشی:</label>
                 <div className="relative">
                   <textarea 
-                    className="w-full p-4 rounded-xl border-0 bg-white shadow-inner ring-1 ring-gray-200 text-sm focus:ring-2 focus:ring-primary/30 outline-none resize-none"
+                    className="w-full p-4 rounded-xl border-0 bg-white dark:bg-gray-800 shadow-inner ring-1 ring-gray-200 dark:ring-gray-700 text-sm focus:ring-2 focus:ring-primary/30 dark:text-gray-200 outline-none resize-none"
                     rows={3}
                     placeholder="توضیحات خود را بنویسید..."
                     value={designState.prompt}
@@ -889,10 +920,10 @@ const App: React.FC = () => {
               </div>
             </div>
           ) : activeTab === 'gallery' ? (
-             <div className="p-6 h-full overflow-y-auto bg-gray-50 flex flex-col">
+             <div className="p-6 h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 flex flex-col">
                 <button 
                   onClick={() => galleryInputRef.current?.click()}
-                  className="w-full py-3 mb-4 bg-white border border-gray-200 hover:border-primary text-gray-600 hover:text-primary rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-sm flex-shrink-0"
+                  className="w-full py-3 mb-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary text-gray-600 dark:text-gray-300 hover:text-primary rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-sm flex-shrink-0"
                 >
                    <Plus size={18} />
                    افزودن دستی طرح
@@ -900,15 +931,15 @@ const App: React.FC = () => {
                 <input ref={galleryInputRef} type="file" className="hidden" accept="image/*" onChange={handleGalleryUpload} />
 
                 {savedDesigns.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-400 dark:text-gray-500">
                      <Images size={48} className="mb-3 opacity-50" />
                      <p className="text-sm">هنوز طرحی ذخیره نکرده‌اید.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     {savedDesigns.map((design) => (
-                      <div key={design.id} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 group animate-fade-in">
-                        <div className="relative h-32 rounded-lg overflow-hidden mb-3 bg-gray-100">
+                      <div key={design.id} className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 group animate-fade-in">
+                        <div className="relative h-32 rounded-lg overflow-hidden mb-3 bg-gray-100 dark:bg-gray-700">
                           <img src={design.generatedImage} alt="Saved" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                              <button onClick={() => handleLoadDesign(design)} className="bg-white text-primary text-xs px-3 py-1.5 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors">باز کردن</button>
@@ -916,10 +947,10 @@ const App: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-bold text-gray-800 truncate max-w-[150px]">{design.prompt || 'طرح دستی'}</p>
-                            <p className="text-[10px] text-gray-400">{new Date(design.timestamp).toLocaleDateString('fa-IR')}</p>
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">{design.prompt || 'طرح دستی'}</p>
+                            <p className="text-[10px] text-gray-400 dark:text-gray-500">{new Date(design.timestamp).toLocaleDateString('fa-IR')}</p>
                           </div>
-                          <button onClick={(e) => handleDeleteDesign(design.id, e)} className="text-gray-300 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors"><Trash2 size={16} /></button>
+                          <button onClick={(e) => handleDeleteDesign(design.id, e)} className="text-gray-300 dark:text-gray-600 hover:text-red-500 p-2 rounded-full hover:bg-red-50 dark:hover:bg-gray-700 transition-colors"><Trash2 size={16} /></button>
                         </div>
                       </div>
                     ))}
@@ -927,23 +958,23 @@ const App: React.FC = () => {
                 )}
              </div>
           ) : (
-            <div className="h-full flex flex-col bg-white">
+            <div className="h-full flex flex-col bg-white dark:bg-gray-800">
               
               {/* AppSite Branding Header */}
-              <div className="p-4 bg-gray-50 border-b border-gray-100 flex flex-col items-center text-center flex-shrink-0">
+              <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center text-center flex-shrink-0">
                 <div className="flex gap-4 w-full justify-center">
-                  <a href="https://t.me/AppSite1" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#0088cc] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#0077b5] transition-colors shadow-lg shadow-blue-200">
+                  <a href="https://t.me/AppSite1" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#0088cc] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#0077b5] transition-colors shadow-lg shadow-blue-200 dark:shadow-none">
                     <Send size={16} className="-rotate-45" />
                     تلگرام
                   </a>
-                  <a href="https://eitaa.com/AppSite1" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#ff7900] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#e66d00] transition-colors shadow-lg shadow-orange-200">
+                  <a href="https://eitaa.com/AppSite1" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#ff7900] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#e66d00] transition-colors shadow-lg shadow-orange-200 dark:shadow-none">
                     <MessageCircle size={16} />
                     ایتا
                   </a>
                 </div>
               </div>
 
-              <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex-shrink-0">
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex-shrink-0">
                 <WallpaperCalculator />
               </div>
               <div className="flex-1 overflow-hidden">
