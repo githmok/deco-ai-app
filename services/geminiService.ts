@@ -1,6 +1,14 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { ChatMessage } from "../types";
 
+// Fix for TS2580: Declare process for TypeScript environment
+declare const process: {
+  env: {
+    API_KEY: string;
+    [key: string]: string | undefined;
+  };
+};
+
 const getClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
@@ -133,8 +141,11 @@ export const generateRoomRedesign = async (
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) throw new Error("No response generated");
 
+    const content = candidates[0].content;
+    if (!content || !content.parts) throw new Error("Invalid response format");
+
     // Check for image parts
-    for (const part of candidates[0].content.parts) {
+    for (const part of content.parts) {
       if (part.inlineData) {
         // Use the returned mime type or default to image/png
         const mimeType = part.inlineData.mimeType || 'image/png';
@@ -143,7 +154,7 @@ export const generateRoomRedesign = async (
     }
     
     // Check for text refusal/error
-    const textPart = candidates[0].content.parts.find(p => p.text);
+    const textPart = content.parts.find(p => p.text);
     if (textPart) {
         console.warn("Model returned text instead of image:", textPart.text);
         // Sometimes the model answers "I cannot do that". We treat this as an error for the UI.
@@ -202,7 +213,17 @@ export const sendChatMessage = async (
 
     const text = response.text || "متاسفانه نتوانستم پاسخی تولید کنم.";
     
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    // Safe access to candidates
+    const candidates = response.candidates;
+    let groundingChunks: any[] = [];
+
+    if (candidates && candidates.length > 0) {
+       const metadata = candidates[0].groundingMetadata;
+       if (metadata && metadata.groundingChunks) {
+           groundingChunks = metadata.groundingChunks;
+       }
+    }
+    
     const webLinks: { uri: string; title: string }[] = [];
 
     if (groundingChunks) {
