@@ -58,16 +58,28 @@ const TRIAL_DAYS = 10;
 const TRIAL_DURATION_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
 // Helper to compress images AND convert URLs to base64 to avoid API errors
-// Now handles Fetching remote URLs to ensure we get Base64 data
+// Now handles Fetching remote URLs via Proxy to bypass CORS
 const compressImage = async (input: string, maxWidth = 1024, quality = 0.8): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     let sourceStr = input;
     
-    // If input is a URL (e.g. Unsplash), fetch it first to get the blob
-    // This avoids tainted canvas issues with some CORS images
+    // If input is a URL (e.g. Unsplash or User Link), fetch it first to get the blob
     if (input.startsWith('http')) {
       try {
-        const response = await fetch(input);
+        // 1. Try Direct Fetch first
+        let response = await fetch(input, { mode: 'cors' }).catch(() => null);
+        
+        // 2. If Direct fails (CORS error), try via Proxy
+        if (!response || !response.ok) {
+           // Using allorigins.win as a CORS proxy
+           const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(input)}`;
+           response = await fetch(proxyUrl);
+        }
+
+        if (!response || !response.ok) {
+           throw new Error("Failed to fetch image even with proxy");
+        }
+
         const blob = await response.blob();
         sourceStr = await new Promise((res) => {
            const reader = new FileReader();
@@ -75,7 +87,9 @@ const compressImage = async (input: string, maxWidth = 1024, quality = 0.8): Pro
            reader.readAsDataURL(blob);
         });
       } catch (e) {
-        console.warn("Failed to fetch remote image directly, attempting Image object fallback", e);
+        console.warn("Failed to fetch remote image:", e);
+        // Fallback: Continue and let the Image object try to load it. 
+        // Note: If CORS fails here, canvas.toDataURL will fail later.
       }
     }
 
@@ -102,7 +116,8 @@ const compressImage = async (input: string, maxWidth = 1024, quality = 0.8): Pro
           // Always convert to JPEG base64
           resolve(canvas.toDataURL('image/jpeg', quality));
         } catch (e) {
-          // Canvas tainted (CORS error)
+          // Canvas tainted (CORS error) - This means the proxy failed or wasn't used
+          console.error("Canvas Tainted:", e);
           reject(new Error("CORS_ERROR"));
         }
       } else {
@@ -435,7 +450,7 @@ const App: React.FC = () => {
           } catch (e: any) {
               console.error(e);
               if (e.message === 'CORS_ERROR' || (e.message && e.message.includes('CORS'))) {
-                  alert("امکان دریافت این تصویر به دلیل محدودیت‌های امنیتی (CORS) وجود ندارد.\nلطفاً تصویر را دانلود کرده و به صورت دستی آپلود کنید.");
+                  alert("خطای دسترسی به تصویر (CORS). ما سعی کردیم از پروکسی استفاده کنیم اما موفق نشدیم. لطفاً لینک مستقیم‌تری وارد کنید یا تصویر را دانلود کرده و دستی آپلود کنید.");
               } else {
                   alert("خطا در دانلود تصویر. لطفاً از لینک مستقیم و معتبر استفاده کنید.");
               }
@@ -576,9 +591,20 @@ const App: React.FC = () => {
 
     } catch (error: any) {
       console.error(error);
-      const errMsg = error.message.includes('AI Refusal') || error.message.includes('No image data')
-        ? `خطا: ${error.message}`
-        : 'خطا در تولید تصویر. لطفاً از اتصال اینترنت اطمینان حاصل کنید یا تصویر دیگری امتحان کنید.';
+      const isApiRefusal = error.message.includes('AI Refusal') || error.message.includes('No image data');
+      const isCorsError = error.message === 'CORS_ERROR';
+      const isLoadError = error.message === 'LOAD_ERROR';
+
+      let errMsg = 'خطا در تولید تصویر. لطفاً دوباره تلاش کنید.';
+      
+      if (isApiRefusal) {
+         errMsg = `هوش مصنوعی درخواست را رد کرد: ${error.message}`;
+      } else if (isCorsError || isLoadError) {
+         errMsg = 'خطا در پردازش تصویر اولیه یا طرح کاغذ. اگر از لینک استفاده کرده‌اید، ممکن است لینک منقضی شده باشد.';
+      } else if (error.message.includes('403') || error.message.includes('permission')) {
+          errMsg = 'خطای عدم دسترسی (403). لطفاً اتصال VPN خود را بررسی کنید (ایران تحریم است).';
+      }
+
       alert(errMsg);
       setStatus(AppStatus.ERROR);
     }
